@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>☕️ & 🍻 エプロント 飲み会日程調整</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'M PLUS Rounded 1c', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-amber-50/40 text-stone-800 min-h-screen pb-20">
+
+  <!-- ヘッダー -->
+  <header class="bg-gradient-to-r from-stone-900 via-amber-950 to-stone-900 text-white py-8 px-4 text-center shadow-lg relative overflow-hidden">
+    <div class="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/20 rounded-full blur-2xl"></div>
+    <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-amber-500/10 rounded-full blur-2xl"></div>
+    
+    <div class="max-w-lg mx-auto relative z-10">
+      <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/20 border border-amber-400/30 rounded-full text-amber-300 text-xs font-semibold mb-3">
+        <span>☕️ エプロント高槻アクトアモーレ同期</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
+        飲み会日程調整 🍻
+      </h1>
+      <p class="text-stone-300 text-sm leading-relaxed">
+        10/8以降の<span class="text-amber-400 font-bold">金・土・日</span>で、みんなが空いてる日を決めよう！
+      </p>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="max-w-xl mx-auto px-4 mt-6 space-y-6">
+
+    <!-- 回答入力カード -->
+    <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-stone-200/70">
+      <h2 class="text-lg font-bold text-stone-900 flex items-center gap-2 mb-4">
+        <span class="w-7 h-7 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-black">1</span>
+        あなたの名前を入力
+      </h2>
+      <input type="text" id="userName" placeholder="名前" class="w-full px-4 py-3 rounded-2xl border-2 border-stone-200 focus:border-amber-500 focus:outline-none text-base font-semibold transition">
+
+      <!-- 神ボタン：いつでもどうぞ！ -->
+      <div class="mt-6 pt-5 border-t border-stone-100">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold text-stone-700 flex items-center gap-1.5">
+            <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-xs font-bold">2</span>
+            日程の選択
+          </h3>
+          <span class="text-xs text-stone-400">タップして切り替え</span>
+        </div>
+
+        <!-- 一括選択ボタン -->
+        <div class="grid grid-cols-2 gap-2.5 mb-5">
+          <button type="button" onclick="setAllStatus('ok')" class="col-span-2 py-3 px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-[0.98] text-white rounded-2xl font-bold shadow-md shadow-amber-500/20 flex items-center justify-center gap-2 text-sm transition">
+            <span class="text-base">🎉</span>
+            <span>いつでもどうぞ！（全日程 ◯）</span>
+          </button>
+          <button type="button" onclick="setAllStatus('maybe')" class="py-2 px-3 bg-stone-100 hover:bg-stone-200 active:scale-[0.98] text-stone-700 rounded-xl font-semibold text-xs transition">
+            全部 △ にする
+          </button>
+          <button type="button" onclick="setAllStatus('ng')" class="py-2 px-3 bg-stone-100 hover:bg-stone-200 active:scale-[0.98] text-stone-700 rounded-xl font-semibold text-xs transition">
+            全部 ✕ にする
+          </button>
+        </div>
+
+        <!-- 月別タブ切り替え -->
+        <div class="flex rounded-xl bg-stone-100 p-1 mb-4 text-xs font-bold">
+          <button type="button" id="tabOctBtn" onclick="switchMonth('oct')" class="flex-1 py-2 rounded-lg bg-white shadow-sm text-stone-900 transition">
+            10月（10/9〜10/31）
+          </button>
+          <button type="button" id="tabNovBtn" onclick="switchMonth('nov')" class="flex-1 py-2 rounded-lg text-stone-500 transition">
+            11月（11/1〜11/29）
+          </button>
+        </div>
+
+        <!-- 日程カードリスト -->
+        <div id="datesContainer" class="space-y-2.5">
+          <!-- JSで自動生成 -->
+        </div>
+      </div>
+
+      <!-- コメント欄 -->
+      <div class="mt-6 pt-5 border-t border-stone-100">
+        <label class="block text-sm font-bold text-stone-700 mb-2">
+          💬 ひとことメモ（任意）
+        </label>
+        <input type="text" id="userComment" placeholder="例: 19時以降ならいつでも！、終電23時です 等" class="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:border-amber-500 focus:outline-none text-sm transition">
+      </div>
+
+      <!-- 送信ボタン -->
+      <button type="button" onclick="submitVote()" class="mt-6 w-full py-4 bg-stone-900 hover:bg-stone-800 active:scale-[0.99] text-white rounded-2xl font-extrabold text-base shadow-lg shadow-stone-900/20 flex items-center justify-center gap-2 transition">
+        <span>この内容で投票する</span>
+        <span>🚀</span>
+      </button>
+    </div>
+
+    <!-- 集計結果ボード -->
+    <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-stone-200/70 space-y-5">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-extrabold text-stone-900 flex items-center gap-2">
+          <span>🏆</span>
+          <span>投票結果ランキング</span>
+        </h2>
+        <span id="voteCountBadge" class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold">
+          回答: 0 / 5人
+        </span>
+      </div>
+
+      <!-- TOP 3 ハイライト -->
+      <div id="topRanking" class="space-y-2">
+        <!-- JSで生成 -->
+      </div>
+
+      <!-- 全員の一覧テーブル（横スクロール） -->
+      <div class="pt-4 border-t border-stone-100">
+        <h3 class="text-sm font-bold text-stone-700 mb-3 flex items-center justify-between">
+          <span>📊 各自の空き状況一覧</span>
+          <span class="text-xs text-stone-400 font-normal">横スクロール可能</span>
+        </h3>
+        <div class="overflow-x-auto custom-scroll border border-stone-100 rounded-2xl">
+          <table class="w-full text-xs text-center border-collapse whitespace-nowrap" id="matrixTable">
+            <!-- JSで生成 -->
+          </table>
+        </div>
+      </div>
+
+      <!-- デモ用テストデータボタン -->
+      <div class="pt-3 flex justify-end gap-2 text-xs text-stone-400">
+        <button type="button" onclick="loadSampleData()" class="hover:text-amber-600 underline">
+          ※同期のサンプル回答を読み込む
+        </button>
+        <span>|</span>
+        <button type="button" onclick="resetAllData()" class="hover:text-red-600 underline">
+          リセット
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // 候補日データ（2026年 10月・11月の金土日）
+    const DATES = [
+      // 10月
+      { id: "10-09", month: "oct", date: "10/09", day: "金", label: "10/09(金)", note: "第1週" },
+      { id: "10-10", month: "oct", date: "10/10", day: "土", label: "10/10(土)", note: "翌日・翌々日休み！", badge: "3連休中日" },
+      { id: "10-11", month: "oct", date: "10/11", day: "日", label: "10/11(日)", note: "翌日10/12(月)は祝日！", badge: "翌日祝日" },
+      { id: "10-16", month: "oct", date: "10/16", day: "金", label: "10/16(金)", note: "第2週" },
+      { id: "10-17", month: "oct", date: "10/17", day: "土", label: "10/17(土)", note: "週末" },
+      { id: "10-18", month: "oct", date: "10/18", day: "日", label: "10/18(日)", note: "週末" },
+      { id: "10-23", month: "oct", date: "10/23", day: "金", label: "10/23(金)", note: "第3週" },
+      { id: "10-24", month: "oct", date: "10/24", day: "土", label: "10/24(土)", note: "週末" },
+      { id: "10-25", month: "oct", date: "10/25", day: "日", label: "10/25(日)", note: "週末" },
+      { id: "10-30", month: "oct", date: "10/30", day: "金", label: "10/30(金)", note: "月末金曜" },
+      { id: "10-31", month: "oct", date: "10/31", day: "土", label: "10/31(土)", note: "ハロウィン🎃" },
+      // 11月
+      { id: "11-01", month: "nov", date: "11/01", day: "日", label: "11/01(日)", note: "11月スタート" },
+      { id: "11-06", month: "nov", date: "11/06", day: "金", label: "11/06(金)", note: "第1週" },
+      { id: "11-07", month: "nov", date: "11/07", day: "土", label: "11/07(土)", note: "週末" },
+      { id: "11-08", month: "nov", date: "11/08", day: "日", label: "11/08(日)", note: "週末" },
+      { id: "11-13", month: "nov", date: "11/13", day: "金", label: "11/13(金)", note: "第2週" },
+      { id: "11-14", month: "nov", date: "11/14", day: "土", label: "11/14(土)", note: "週末" },
+      { id: "11-15", month: "nov", date: "11/15", day: "日", label: "11/15(日)", note: "週末" },
+      { id: "11-20", month: "nov", date: "11/20", day: "金", label: "11/20(金)", note: "第3週" },
+      { id: "11-21", month: "nov", date: "11/21", day: "土", label: "11/21(土)", note: "翌日・翌々日休み！", badge: "3連休中日" },
+      { id: "11-22", month: "nov", date: "11/22", day: "日", label: "11/22(日)", note: "翌日11/23(月)は勤労感謝の日！", badge: "翌日祝日" },
+      { id: "11-27", month: "nov", date: "11/27", day: "金", label: "11/27(金)", note: "月末金曜" },
+      { id: "11-28", month: "nov", date: "11/28", day: "土", label: "11/28(土)", note: "週末" },
+      { id: "11-29", month: "nov", date: "11/29", day: "日", label: "11/29(日)", note: "週末" },
+    ];
+
+    // 現在の選択状態 (id -> 'ok' | 'maybe' | 'ng')
+    let currentChoices = {};
+    DATES.forEach(d => currentChoices[d.id] = 'ok'); // 初期状態はOK
+
+    let currentMonth = 'oct';
+
+    // ローカルストレージキー
+    const STORAGE_KEY = 'nomikai_votes_data_v1';
+
+    // 保存されている全投票データ
+    let allVotes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+    // 月タブ切り替え
+    function switchMonth(m) {
+      currentMonth = m;
+      const octBtn = document.getElementById('tabOctBtn');
+      const novBtn = document.getElementById('tabNovBtn');
+
+      if (m === 'oct') {
+        octBtn.className = "flex-1 py-2 rounded-lg bg-white shadow-sm text-stone-900 transition";
+        novBtn.className = "flex-1 py-2 rounded-lg text-stone-500 transition";
+      } else {
+        novBtn.className = "flex-1 py-2 rounded-lg bg-white shadow-sm text-stone-900 transition";
+        octBtn.className = "flex-1 py-2 rounded-lg text-stone-500 transition";
+      }
+      renderDateCards();
+    }
+
+    // 全日程の一括設定
+    function setAllStatus(status) {
+      DATES.forEach(d => {
+        currentChoices[d.id] = status;
+      });
+      renderDateCards();
+    }
+
+    // 個別の日程ステータス設定
+    function setSingleStatus(id, status) {
+      currentChoices[id] = status;
+      renderDateCards();
+    }
+
+    // 日程カードの描画
+    function renderDateCards() {
+      const container = document.getElementById('datesContainer');
+      const filtered = DATES.filter(d => d.month === currentMonth);
+
+      container.innerHTML = filtered.map(d => {
+        const choice = currentChoices[d.id] || 'ok';
+        
+        let dayColor = "text-purple-600 bg-purple-50";
+        if (d.day === '土') dayColor = "text-blue-600 bg-blue-50";
+        if (d.day === '日') dayColor = "text-red-600 bg-red-50";
+
+        return `
+          <div class="flex items-center justify-between p-3 rounded-2xl border ${choice === 'ok' ? 'border-amber-400 bg-amber-50/40' : choice === 'maybe' ? 'border-stone-200 bg-stone-50/50' : 'border-stone-200 bg-stone-50/30 opacity-60'} transition">
+            <div class="flex items-center gap-3">
+              <span class="w-10 h-10 rounded-xl ${dayColor} font-black text-sm flex flex-col items-center justify-center leading-none">
+                <span class="text-xs">${d.date.split('/')[0]}/</span>
+                <span>${d.date.split('/')[1]}</span>
+              </span>
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <span class="font-bold text-stone-900 text-sm">${d.label}</span>
+                  ${d.badge ? `<span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">${d.badge}</span>` : ''}
+                </div>
+                <div class="text-xs text-stone-400">${d.note}</div>
+              </div>
+            </div>
+
+            <!-- ◯ △ ✕ ボタングループ -->
+            <div class="flex items-center gap-1 bg-stone-100 p-1 rounded-xl">
+              <button type="button" onclick="setSingleStatus('${d.id}', 'ok')" class="w-8 h-8 rounded-lg font-black text-sm flex items-center justify-center transition ${choice === 'ok' ? 'bg-amber-500 text-white shadow-sm' : 'text-stone-400 hover:text-stone-700'}">◯</button>
+              <button type="button" onclick="setSingleStatus('${d.id}', 'maybe')" class="w-8 h-8 rounded-lg font-black text-sm flex items-center justify-center transition ${choice === 'maybe' ? 'bg-amber-400 text-white shadow-sm' : 'text-stone-400 hover:text-stone-700'}">△</button>
+              <button type="button" onclick="setSingleStatus('${d.id}', 'ng')" class="w-8 h-8 rounded-lg font-black text-sm flex items-center justify-center transition ${choice === 'ng' ? 'bg-stone-500 text-white shadow-sm' : 'text-stone-400 hover:text-stone-700'}">✕</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 投票の保存
+    function submitVote() {
+      const nameInput = document.getElementById('userName');
+      const commentInput = document.getElementById('userComment');
+      const name = nameInput.value.trim();
+
+      if (!name) {
+        alert('お名前を入力してください！😊');
+        nameInput.focus();
+        return;
+      }
+
+      // 既存の同じ名前の回答があれば上書き
+      const existingIdx = allVotes.findIndex(v => v.name === name);
+      const voteData = {
+        name: name,
+        comment: commentInput.value.trim(),
+        choices: { ...currentChoices },
+        updatedAt: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      if (existingIdx >= 0) {
+        allVotes[existingIdx] = voteData;
+      } else {
+        allVotes.push(voteData);
+      }
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allVotes));
+      alert(`🎉 ${name} さんの投票を受け付けました！`);
+      renderSummary();
+    }
+
+    // 集計結果の描画
+    function renderSummary() {
+      document.getElementById('voteCountBadge').textContent = `回答: ${allVotes.length} / 5人`;
+
+      if (allVotes.length === 0) {
+        document.getElementById('topRanking').innerHTML = `
+          <div class="text-center py-6 text-stone-400 text-sm">
+            まだ回答がありません。<br>上のフォームから投票してみてね！
+          </div>
+        `;
+        document.getElementById('matrixTable').innerHTML = '';
+        return;
+      }
+
+      // 各日程のスコア集計 (◯=2点, △=1点, ✕=0点)
+      const scores = DATES.map(d => {
+        let okCount = 0;
+        let maybeCount = 0;
+        let ngCount = 0;
+
+        allVotes.forEach(v => {
+          const choice = v.choices[d.id] || 'ng';
+          if (choice === 'ok') okCount++;
+          else if (choice === 'maybe') maybeCount++;
+          else ngCount++;
+        });
+
+        const score = okCount * 2 + maybeCount;
+        return {
+          ...d,
+          okCount,
+          maybeCount,
+          ngCount,
+          score
+        };
+      });
+
+      // スコア降順にソート
+      scores.sort((a, b) => b.score - a.score || b.okCount - a.okCount);
+
+      // TOP 3 表示
+      const top3 = scores.slice(0, 3);
+      const medals = ['🥇', '🥈', '🥉'];
+      
+      document.getElementById('topRanking').innerHTML = top3.map((s, idx) => {
+        const isPerfect = s.okCount === allVotes.length && allVotes.length >= 2;
+        return `
+          <div class="flex items-center justify-between p-3 rounded-2xl border ${idx === 0 ? 'bg-amber-50 border-amber-300 shadow-sm' : 'bg-stone-50 border-stone-200'}">
+            <div class="flex items-center gap-2.5">
+              <span class="text-2xl">${medals[idx]}</span>
+              <div>
+                <div class="font-extrabold text-stone-900 text-sm flex items-center gap-2">
+                  <span>${s.label}</span>
+                  ${isPerfect ? `<span class="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">全員参加可能！✨</span>` : ''}
+                </div>
+                <div class="text-xs text-stone-500">${s.note}</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm font-black text-amber-700">
+                ◯ ${s.okCount}人 <span class="text-xs text-stone-400 font-normal">/ △ ${s.maybeCount}人 / ✕ ${s.ngCount}人</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // マトリクステーブル生成
+      let tableHtml = `
+        <thead>
+          <tr class="bg-stone-100 text-stone-700 font-bold">
+            <th class="p-2.5 text-left sticky left-0 bg-stone-100 z-10 border-r border-stone-200">日程</th>
+            <th class="p-2.5">◯数</th>
+            ${allVotes.map(v => `<th class="p-2.5 font-bold">${v.name}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100">
+      `;
+
+      DATES.forEach(d => {
+        const dScore = scores.find(s => s.id === d.id);
+        const isTop = top3.some(t => t.id === d.id);
+
+        tableHtml += `
+          <tr class="${isTop ? 'bg-amber-50/50 font-bold' : ''}">
+            <td class="p-2 text-left sticky left-0 ${isTop ? 'bg-amber-50' : 'bg-white'} border-r border-stone-200">
+              ${d.label}
+            </td>
+            <td class="p-2 font-black text-amber-600">${dScore.okCount}</td>
+            ${allVotes.map(v => {
+              const c = v.choices[d.id] || 'ng';
+              if (c === 'ok') return '<td class="p-2 text-amber-600 font-bold">◯</td>';
+              if (c === 'maybe') return '<td class="p-2 text-amber-400 font-bold">△</td>';
+              return '<td class="p-2 text-stone-300">✕</td>';
+            }).join('')}
+          </tr>
+        `;
+      });
+
+      tableHtml += '</tbody>';
+      document.getElementById('matrixTable').innerHTML = tableHtml;
+    }
+
+    // デモ用サンプルデータの流し込み
+    function loadSampleData() {
+      allVotes = [
+        {
+          name: "自分",
+          comment: "いつでも空いてます！誕生日祝ってください笑",
+          choices: DATES.reduce((acc, d) => ({ ...acc, [d.id]: 'ok' }), {}),
+          updatedAt: "19:00"
+        },
+        {
+          name: "同期A (金土日限定)",
+          comment: "金土日なら行ける！",
+          choices: DATES.reduce((acc, d) => {
+            acc[d.id] = (d.id === "10-10" || d.id === "10-11" || d.id === "10-17" || d.id === "11-07" || d.id === "11-21") ? 'ok' : (d.day === '金' ? 'maybe' : 'ng');
+            return acc;
+          }, {}),
+          updatedAt: "19:15"
+        },
+        {
+          name: "同期B",
+          comment: "10月中旬以降希望！",
+          choices: DATES.reduce((acc, d) => {
+            acc[d.id] = (d.id.startsWith("10-09") || d.id.startsWith("10-10")) ? 'ng' : 'ok';
+            return acc;
+          }, {}),
+          updatedAt: "19:20"
+        },
+        {
+          name: "同期C",
+          comment: "いつでもOK！",
+          choices: DATES.reduce((acc, d) => ({ ...acc, [d.id]: 'ok' }), {}),
+          updatedAt: "19:30"
+        }
+      ];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allVotes));
+      renderSummary();
+    }
+
+    function resetAllData() {
+      if (confirm('投票データをリセットしますか？')) {
+        allVotes = [];
+        localStorage.removeItem(STORAGE_KEY);
+        renderSummary();
+      }
+    }
+
+    // 初期化
+    renderDateCards();
+    renderSummary();
+  </script>
+</body>
+</html>
