@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="robots" content="noindex, nofollow">
   <title>☕️ & 🍻 エプロント 飲み会日程調整</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -33,13 +34,13 @@
     
     <div class="max-w-lg mx-auto relative z-10">
       <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/20 border border-amber-400/30 rounded-full text-amber-300 text-xs font-semibold mb-3">
-        <span>☕️ エプロント高槻アクトアモーレ同期</span>
+        <span>☕️ エプロント高槻アクトアモーレ店</span>
       </div>
       <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
         飲み会日程調整 🍻
       </h1>
       <p class="text-stone-300 text-sm leading-relaxed">
-        10/8以降の<span class="text-amber-400 font-bold">金・土・日</span>で、みんなが空いてる日を決めよう！
+        <span class="text-amber-400 font-bold">金・土・日</span>で、みんなが空いてる日を決めよう！
       </p>
     </div>
   </header>
@@ -108,6 +109,34 @@
         <span>この内容で投票する</span>
         <span>🚀</span>
       </button>
+
+      <!-- 送信完了＆LINE共有エリア（送信後に表示） -->
+      <div id="successArea" class="hidden mt-6 p-4 sm:p-5 rounded-2xl bg-amber-50 border-2 border-amber-400 text-center space-y-3.5 animate-fade-in">
+        <div class="text-base font-extrabold text-stone-900 flex items-center justify-center gap-1.5">
+          <span>🎉</span>
+          <span id="successMsg">投票を受け付けました！</span>
+        </div>
+        <p class="text-xs text-stone-600 leading-relaxed">
+          下のボタンを押すと、LINEグループに自分の空き日程を一瞬で共有できます！
+        </p>
+
+        <!-- LINE共有ボタン -->
+        <a id="lineShareBtn" href="#" target="_blank" class="w-full py-4 px-4 bg-[#06C755] hover:bg-[#05b34c] active:scale-[0.98] text-white rounded-2xl font-extrabold text-base shadow-lg shadow-green-600/25 flex items-center justify-center gap-2.5 transition">
+          <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 5.92 2 10.75c0 4.31 3.59 7.91 8.44 8.61.33.07.78.22.89.51.1.26.07.67.03.93l-.15.93c-.05.28-.21 1.11.97.6 1.19-.51 6.43-3.79 8.78-6.49C22.36 13.9 22 12.35 22 10.75 22 5.92 17.52 2 12 2z"/></svg>
+          <span>LINEグループに回答をシェアする</span>
+        </a>
+
+        <!-- 共有メッセージのプレビュー & コピー -->
+        <div class="pt-3 border-t border-amber-200/80 text-left">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] font-bold text-stone-500">LINE送信文面のプレビュー</span>
+            <button type="button" onclick="copyLineText()" class="text-xs font-bold text-amber-800 hover:text-amber-950 flex items-center gap-1 bg-amber-200/80 hover:bg-amber-300 px-2.5 py-1 rounded-lg transition">
+              <span id="copyBtnText">📋 文面をコピー</span>
+            </button>
+          </div>
+          <div id="linePreviewText" class="p-3 bg-white rounded-xl border border-amber-200 text-xs text-stone-700 whitespace-pre-wrap font-mono leading-relaxed max-h-40 overflow-y-auto"></div>
+        </div>
+      </div>
     </div>
 
     <!-- 集計結果ボード -->
@@ -117,9 +146,14 @@
           <span>🏆</span>
           <span>投票結果ランキング</span>
         </h2>
-        <span id="voteCountBadge" class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold">
-          回答: 0 / 5人
-        </span>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="copyShareUrl()" title="現在の集計結果URLをコピー" class="text-xs bg-stone-100 hover:bg-stone-200 text-stone-700 px-2.5 py-1 rounded-full font-bold transition flex items-center gap-1">
+            <span>🔗 結果リンク</span>
+          </button>
+          <span id="voteCountBadge" class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold">
+            回答: 0 / 5人
+          </span>
+        </div>
       </div>
 
       <!-- TOP 3 ハイライト -->
@@ -143,7 +177,7 @@
       <!-- デモ用テストデータボタン -->
       <div class="pt-3 flex justify-end gap-2 text-xs text-stone-400">
         <button type="button" onclick="loadSampleData()" class="hover:text-amber-600 underline">
-          ※同期のサンプル回答を読み込む
+          ※サンプル回答を読み込む
         </button>
         <span>|</span>
         <button type="button" onclick="resetAllData()" class="hover:text-red-600 underline">
@@ -194,8 +228,92 @@
     // ローカルストレージキー
     const STORAGE_KEY = 'nomikai_votes_data_v1';
 
-    // 保存されている全投票データ
+    // UTF-8 安全な Base64 エンコード / デコード（サーバー不要のデータ共有用）
+    function encodeData(obj) {
+      try {
+        const json = JSON.stringify(obj);
+        const bytes = new TextEncoder().encode(json);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      } catch (e) {
+        console.error('エンコードエラー:', e);
+        return '';
+      }
+    }
+
+    function decodeData(str) {
+      try {
+        str = str.replace(/-/g, '+').replace(/_/g, '/');
+        while (str.length % 4) str += '=';
+        const binary = atob(str);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        const json = new TextDecoder().decode(bytes);
+        return JSON.parse(json);
+      } catch (e) {
+        console.error('URLデータ解析失敗:', e);
+        return null;
+      }
+    }
+
+    // 内部データ ⇄ 超コンパクトURL形式の変換
+    function votesToCompressed(votes) {
+      return votes.map(v => {
+        const vStr = DATES.map(d => {
+          const c = v.choices[d.id] || 'ng';
+          return c === 'ok' ? '2' : c === 'maybe' ? '1' : '0';
+        }).join('');
+        return { n: v.name, c: v.comment || '', v: vStr };
+      });
+    }
+
+    function compressedToVotes(compressed) {
+      return compressed.map(item => {
+        const choices = {};
+        const vChars = (item.v || '').split('');
+        DATES.forEach((d, idx) => {
+          const val = vChars[idx] || '0';
+          choices[d.id] = val === '2' ? 'ok' : val === '1' ? 'maybe' : 'ng';
+        });
+        return {
+          name: item.n,
+          comment: item.c || '',
+          choices: choices,
+          updatedAt: '共有データ'
+        };
+      });
+    }
+
+    // 投票データのマージ（名前をキーにしてマージ）
+    function mergeVotes(existingVotes, incomingVotes) {
+      const map = new Map();
+      existingVotes.forEach(v => map.set(v.name, v));
+      incomingVotes.forEach(v => map.set(v.name, v));
+      return Array.from(map.values());
+    }
+
+    // 保存されている全投票データ（ローカル + URLパラメータから初期化）
     let allVotes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sharedParam = urlParams.get('d');
+      if (sharedParam) {
+        const decoded = decodeData(sharedParam);
+        if (decoded && Array.isArray(decoded)) {
+          const incomingVotes = compressedToVotes(decoded);
+          allVotes = mergeVotes(allVotes, incomingVotes);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(allVotes));
+        }
+      }
+    } catch (e) {
+      console.error('URLパラメータのパースエラー:', e);
+    }
 
     // 月タブ切り替え
     function switchMonth(m) {
@@ -266,7 +384,64 @@
       }).join('');
     }
 
-    // 投票の保存
+    // 共有URLの構築
+    function buildShareUrl() {
+      const base = (window.location.protocol === 'http:' || window.location.protocol === 'https:')
+        ? (window.location.origin + window.location.pathname)
+        : 'https://yato-108.github.io/nomikai-vote/';
+      
+      if (allVotes.length === 0) return base;
+      const compressed = votesToCompressed(allVotes);
+      const enc = encodeData(compressed);
+      return `${base}?d=${enc}`;
+    }
+
+    // クリップボードコピーヘルパー
+    let lastGeneratedLineText = '';
+
+    function copyToClipboard(text, onSuccess) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(onSuccess).catch(() => fallbackCopy(text, onSuccess));
+      } else {
+        fallbackCopy(text, onSuccess);
+      }
+    }
+
+    function fallbackCopy(text, onSuccess) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        if (onSuccess) onSuccess();
+      } catch (e) {
+        console.error('クリップボードコピー失敗:', e);
+      }
+      document.body.removeChild(textarea);
+    }
+
+    function copyLineText() {
+      if (!lastGeneratedLineText) return;
+      copyToClipboard(lastGeneratedLineText, () => {
+        const btn = document.getElementById('copyBtnText');
+        btn.textContent = '✅ コピー完了！';
+        setTimeout(() => {
+          btn.textContent = '📋 文面をコピー';
+        }, 2000);
+      });
+    }
+
+    function copyShareUrl() {
+      const url = buildShareUrl();
+      copyToClipboard(url, () => {
+        alert('🔗 最新の集計URLをコピーしました！LINEに貼り付けて共有できます。');
+      });
+    }
+
+    // 投票の保存 & LINE共有リンク生成
     function submitVote() {
       const nameInput = document.getElementById('userName');
       const commentInput = document.getElementById('userComment');
@@ -294,8 +469,51 @@
       }
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(allVotes));
-      alert(`🎉 ${name} さんの投票を受け付けました！`);
       renderSummary();
+
+      // LINE共有用テキスト生成
+      const okDates = DATES.filter(d => currentChoices[d.id] === 'ok').map(d => d.label);
+      const maybeDates = DATES.filter(d => currentChoices[d.id] === 'maybe').map(d => d.label);
+
+      let okText = '';
+      if (okDates.length === DATES.length) {
+        okText = '🙆‍♂️ ◯: いつでもどうぞ！全日程行けます🎉';
+      } else if (okDates.length > 0) {
+        okText = `🙆‍♂️ ◯ (${okDates.length}日):\n  ${okDates.join(', ')}`;
+      } else {
+        okText = '🙆‍♂️ ◯: なし';
+      }
+
+      let maybeText = '';
+      if (maybeDates.length > 0) {
+        maybeText = `\n🔺 △ (${maybeDates.length}日):\n  ${maybeDates.join(', ')}`;
+      }
+
+      const commentVal = commentInput.value.trim();
+      const commentText = commentVal ? `\n💬 メモ: ${commentVal}` : '';
+
+      const shareUrl = buildShareUrl();
+
+      const lineText = `【エプロント飲み会 日程回答】
+名前: ${name}
+${okText}${maybeText}${commentText}
+
+👇 投票・現在の集計結果はこちら！
+${shareUrl}`;
+
+      lastGeneratedLineText = lineText;
+
+      // LINEリンク設定
+      const lineShareBtn = document.getElementById('lineShareBtn');
+      lineShareBtn.href = `https://line.me/R/msg/text/?${encodeURIComponent(lineText)}`;
+
+      // プレビュー表示
+      document.getElementById('linePreviewText').textContent = lineText;
+      document.getElementById('successMsg').textContent = `${name} さんの投票を保存しました！`;
+
+      const successArea = document.getElementById('successArea');
+      successArea.classList.remove('hidden');
+      successArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     // 集計結果の描画
@@ -405,13 +623,13 @@
     function loadSampleData() {
       allVotes = [
         {
-          name: "自分",
-          comment: "いつでも空いてます！誕生日祝ってください笑",
+          name: "幹事",
+          comment: "いつでも空いてます！誕生日祝いましょー！",
           choices: DATES.reduce((acc, d) => ({ ...acc, [d.id]: 'ok' }), {}),
           updatedAt: "19:00"
         },
         {
-          name: "同期A (金土日限定)",
+          name: "メンバーA",
           comment: "金土日なら行ける！",
           choices: DATES.reduce((acc, d) => {
             acc[d.id] = (d.id === "10-10" || d.id === "10-11" || d.id === "10-17" || d.id === "11-07" || d.id === "11-21") ? 'ok' : (d.day === '金' ? 'maybe' : 'ng');
@@ -420,7 +638,7 @@
           updatedAt: "19:15"
         },
         {
-          name: "同期B",
+          name: "メンバーB",
           comment: "10月中旬以降希望！",
           choices: DATES.reduce((acc, d) => {
             acc[d.id] = (d.id.startsWith("10-09") || d.id.startsWith("10-10")) ? 'ng' : 'ok';
@@ -429,7 +647,7 @@
           updatedAt: "19:20"
         },
         {
-          name: "同期C",
+          name: "メンバーC",
           comment: "いつでもOK！",
           choices: DATES.reduce((acc, d) => ({ ...acc, [d.id]: 'ok' }), {}),
           updatedAt: "19:30"
