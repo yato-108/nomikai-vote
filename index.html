@@ -386,10 +386,7 @@
 
     // 共有URLの構築
     function buildShareUrl() {
-      const base = (window.location.protocol === 'http:' || window.location.protocol === 'https:')
-        ? (window.location.origin + window.location.pathname)
-        : 'https://yato-108.github.io/nomikai-vote/';
-      
+      const base = 'https://tinyurl.com/apront-nomikai';
       if (allVotes.length === 0) return base;
       const compressed = votesToCompressed(allVotes);
       const enc = encodeData(compressed);
